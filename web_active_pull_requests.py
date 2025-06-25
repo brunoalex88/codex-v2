@@ -19,6 +19,7 @@ template = """
     .card { background: #fff; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 1em; margin-bottom: 1em; }
     .repo { font-weight: bold; color: #333; }
     .title { margin-top: 0.5em; }
+    .branches { color: #0070c0; font-size: 0.9em; margin-top: 0.25em; }
     .date { color: #666; font-size: 0.9em; margin-top: 0.25em; }
   </style>
 </head>
@@ -26,8 +27,9 @@ template = """
   <h1>Pull Requests Ativos</h1>
   {% for pr in pull_requests %}
     <div class="card">
-      <div class="repo">{{ pr.repository.name }} #{{ pr.pullRequestId }}</div>
+      <div class="repo"><a href="{{ pr.webUrl }}" target="_blank">{{ pr.repository.name }} #{{ pr.pullRequestId }}</a></div>
       <div class="title">{{ pr.title }}</div>
+      <div class="branches">{{ pr.sourceBranchName }} → {{ pr.targetBranchName }}</div>
       <div class="date">Criada em {{ pr.creationDateFormatted }}</div>
     </div>
   {% endfor %}
@@ -62,6 +64,14 @@ def format_date(date_str: str) -> str:
     return dt.strftime("%d/%m/%Y %H:%M:%S")
 
 
+def strip_ref(ref_name: str) -> str:
+    """Return branch name without refs/heads/ prefix."""
+    prefix = "refs/heads/"
+    if ref_name and ref_name.startswith(prefix):
+        return ref_name[len(prefix):]
+    return ref_name or ""
+
+
 @app.route("/")
 def index():
     org, project, pat = get_config()
@@ -72,6 +82,9 @@ def index():
             pr["creationDateFormatted"] = format_date(date_str)
         else:
             pr["creationDateFormatted"] = ""
+        pr["sourceBranchName"] = strip_ref(pr.get("sourceRefName", ""))
+        pr["targetBranchName"] = strip_ref(pr.get("targetRefName", ""))
+        pr["webUrl"] = pr.get("_links", {}).get("web", {}).get("href", "")
     return render_template_string(template, pull_requests=prs)
 
 
