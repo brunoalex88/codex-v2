@@ -94,13 +94,14 @@ def index():
             pr["creationDateFormatted"] = ""
         pr["sourceBranchName"] = strip_ref(pr.get("sourceRefName", ""))
         pr["targetBranchName"] = strip_ref(pr.get("targetRefName", ""))
+
         repo = pr.get("repository", {})
         project_name = repo.get("project", {}).get("name", project)
         repo_name = repo.get("name", "")
         pr["prUrl"] = (
             f"https://dev.azure.com/{org}/{project_name}/_git/{repo_name}/pullrequest/{pr['pullRequestId']}"
         )
-        pr["reviewers"] = pr.get("reviewers", [])
+        pr["reviewers"] = pr.get("reviewers", [])        
     return render_template_string(template, pull_requests=prs)
 
 
