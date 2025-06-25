@@ -18,22 +18,32 @@ template = """
     body { font-family: Arial, sans-serif; background-color: #f7f7f7; padding: 2em; }
     .card { background: #fff; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 1em; margin-bottom: 1em; }
     .repo { font-weight: bold; color: #333; }
+    .repo-link { text-decoration: none; display: block; }
     .title { margin-top: 0.5em; }
     .branches { color: #0070c0; font-size: 0.9em; margin-top: 0.25em; }
     .date { color: #666; font-size: 0.9em; margin-top: 0.25em; }
+    .reviewers { margin-top: 0.5em; }
+    .reviewers img { width: 32px; height: 32px; border-radius: 50%; margin-right: 0.25em; }
   </style>
 </head>
 <body>
   <h1>Pull Requests Ativos</h1>
   {% for pr in pull_requests %}
     <div class="card">
-      <div class="repo"><a href="{{ pr.webUrl }}" target="_blank">{{ pr.repository.name }} #{{ pr.pullRequestId }}</a></div>
+      <a class="repo-link" href="{{ pr.prUrl }}" target="_blank">
+        <div class="repo">{{ pr.repository.name }} #{{ pr.pullRequestId }}</div>
+      </a>
       <div class="title">{{ pr.title }}</div>
       <div class="branches">{{ pr.sourceBranchName }} → {{ pr.targetBranchName }}</div>
       <div class="date">Criada em {{ pr.creationDateFormatted }}</div>
-    </div>
-  {% endfor %}
-</body>
+      <div class="reviewers">
+        {% for rv in pr.reviewers %}
+        <img src="{{ rv.imageUrl }}" alt="{{ rv.displayName }}" title="{{ rv.displayName }}" />
+        {% endfor %}
+      </div>
+      </div>
+    {% endfor %}
+  </body>
 </html>
 """
 
@@ -84,7 +94,13 @@ def index():
             pr["creationDateFormatted"] = ""
         pr["sourceBranchName"] = strip_ref(pr.get("sourceRefName", ""))
         pr["targetBranchName"] = strip_ref(pr.get("targetRefName", ""))
-        pr["webUrl"] = pr.get("_links", {}).get("web", {}).get("href", "")
+        repo = pr.get("repository", {})
+        project_name = repo.get("project", {}).get("name", project)
+        repo_name = repo.get("name", "")
+        pr["prUrl"] = (
+            f"https://dev.azure.com/{org}/{project_name}/_git/{repo_name}/pullrequest/{pr['pullRequestId']}"
+        )
+        pr["reviewers"] = pr.get("reviewers", [])
     return render_template_string(template, pull_requests=prs)
 
 
