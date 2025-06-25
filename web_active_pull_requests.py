@@ -35,7 +35,7 @@ template = """
       </a>
       <div class="title">{{ pr.title }}</div>
       <div class="branches">{{ pr.sourceBranchName }} → {{ pr.targetBranchName }}</div>
-      <div class="date">{{ pr.creationDateFormatted }}</div>
+      <div class="date">Criada em {{ pr.creationDateFormatted }} por {{ pr.creatorName }}</div>
       <div class="reviewers">
         {% for rv in pr.reviewers %}
         <img src="{{ rv.imageUrl }}" alt="{{ rv.displayName }}" title="{{ rv.displayName }}" />
@@ -51,7 +51,7 @@ template = """
 def get_config():
     organization = "teltelecom"
     project = "Work"
-    pat = "DJUzm2zmQOwxIuQ3Q0fK3xLpQRTfl498uPFXmPGMiMhSXn8LfLkBJQQJ99BFACAAAAAi9eYWAAASAZDOdevP"
+    pat = ""
     if not all([organization, project, pat]):
         raise SystemExit(
             "Please set AZURE_DEVOPS_ORG, AZURE_DEVOPS_PROJECT, and AZURE_DEVOPS_PAT"
@@ -94,6 +94,7 @@ def index():
             pr["creationDateFormatted"] = ""
         pr["sourceBranchName"] = strip_ref(pr.get("sourceRefName", ""))
         pr["targetBranchName"] = strip_ref(pr.get("targetRefName", ""))
+        pr["creatorName"] = pr.get("createdBy", {}).get("displayName", "")
 
         repo = pr.get("repository", {})
         project_name = repo.get("project", {}).get("name", project)
