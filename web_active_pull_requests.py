@@ -18,7 +18,7 @@ template = """
     body { font-family: Arial, sans-serif; background-color: #f7f7f7; padding: 2em; }
     .card { background: #fff; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 1em; margin-bottom: 1em; }
     .repo { font-weight: bold; color: 343a40; }
-    .repo-link { text-decoration: none; color: #007bff }
+    .repo-link { text-decoration: none; color: #007bff; }
     .title { margin-top: 0.5em; }
     .branches { color: #343a40; font-size: 0.9em; margin-top: 0.25em; }
     .date { color: #343a40; font-size: 0.9em; margin-top: 0.25em; }
@@ -30,9 +30,16 @@ template = """
   <h1>Pull Requests Ativos</h1>
   {% for pr in pull_requests %}
     <div class="card">
-      <a class="repo-link" href="{{ pr.prUrl }}" target="_blank">
-        <div class="repo">{{ pr.repository.name }} #{{ pr.pullRequestId }}</div>
-      </a>
+      <div class="repo">
+        <a class="repo-link" href="{{ pr.prUrl }}" target="_blank">
+          {{ pr.repository.name }} #{{ pr.pullRequestId }}
+        </a>
+        <a class="repo-link" href="{{ pr.userStoryUrl }}" target="_blank">
+          {% if pr.userStoryNumber %}
+            User Story {{ pr.userStoryNumber }}
+          {% endif %}
+        </a>
+      </div>
       <div class="title">{{ pr.title }}</div>
       <div class="branches">{{ pr.sourceBranchName }} → {{ pr.targetBranchName }}</div>
       <div class="date">Criada em {{ pr.creationDateFormatted }} por {{ pr.creatorName }}</div>
@@ -48,15 +55,18 @@ template = """
 """
 
 
-def get_config():
-    organization = "teltelecom"
-    project = "Work"
-    pat = ""
-    if not all([organization, project, pat]):
-        raise SystemExit(
-            "Please set AZURE_DEVOPS_ORG, AZURE_DEVOPS_PROJECT, and AZURE_DEVOPS_PAT"
-        )
-    return organization, project, pat
+def extract_user_story_number(title: str) -> str:
+    """
+    Extrai o número da user story do título, considerando padrões como:
+    "US #22021 - ..." ou "US23975-..."
+    """
+    if not title:
+        return ""
+    # Tenta encontrar padrões "US #12345" ou "US12345"
+    match = re.search(r"US\s*#?(\d{3,})", title, re.IGNORECASE)
+    if match:
+        return match.group(1)
+    return ""
 
 
 def format_date(date_str: str) -> str:
@@ -71,7 +81,7 @@ def format_date(date_str: str) -> str:
         dt = datetime.fromisoformat(date_str)
     except ValueError:
         return date_str
-    return dt.strftime("%d/%m/%Y %H:%M:%S")
+    return dt.strftime("%d/%m %H:%M")
 
 
 def strip_ref(ref_name: str) -> str:
@@ -80,6 +90,17 @@ def strip_ref(ref_name: str) -> str:
     if ref_name and ref_name.startswith(prefix):
         return ref_name[len(prefix):]
     return ref_name or ""
+
+
+def get_config():
+    organization = "teltelecom"
+    project = "Work"
+    pat = ""
+    if not all([organization, project, pat]):
+        raise SystemExit(
+            "Please set AZURE_DEVOPS_ORG, AZURE_DEVOPS_PROJECT, and AZURE_DEVOPS_PAT"
+        )
+    return organization, project, pat
 
 
 @app.route("/")
@@ -95,6 +116,15 @@ def index():
         pr["sourceBranchName"] = strip_ref(pr.get("sourceRefName", ""))
         pr["targetBranchName"] = strip_ref(pr.get("targetRefName", ""))
         pr["creatorName"] = pr.get("createdBy", {}).get("displayName", "")
+        pr["userStoryNumber"] = extract_user_story_number(pr.get("title", ""))
+
+        if pr["userStoryNumber"]:
+            # Se quiser parametrizar, pode puxar esses valores de variáveis/env
+            pr["userStoryUrl"] = (
+                f"https://dev.azure.com/teltelecom/Work/_boards/board/t/Java%20Team/Stories?workitem={pr['userStoryNumber']}"
+            )
+        else:
+            pr["userStoryUrl"] = ""
 
         repo = pr.get("repository", {})
         project_name = repo.get("project", {}).get("name", project)
