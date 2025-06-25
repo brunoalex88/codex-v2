@@ -13,17 +13,17 @@ template = """
 <html>
 <head>
   <meta charset='utf-8'>
-  <title>Pull Requests Ativos</title>
+  <title>Pull Requests</title>
   <style>
     body { font-family: Arial, sans-serif; background-color: #f7f7f7; padding: 2em; }
     .card { background: #fff; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 1em; margin-bottom: 1em; }
-    .repo { font-weight: bold; color: #333; }
-    .repo-link { text-decoration: none; display: block; }
+    .repo { font-weight: bold; color: 343a40; }
+    .repo-link { text-decoration: none; color: #007bff }
     .title { margin-top: 0.5em; }
-    .branches { color: #0070c0; font-size: 0.9em; margin-top: 0.25em; }
-    .date { color: #666; font-size: 0.9em; margin-top: 0.25em; }
+    .branches { color: #343a40; font-size: 0.9em; margin-top: 0.25em; }
+    .date { color: #343a40; font-size: 0.9em; margin-top: 0.25em; }
     .reviewers { margin-top: 0.5em; }
-    .reviewers img { width: 32px; height: 32px; border-radius: 50%; margin-right: 0.25em; }
+    .reviewers img { width: 24px; height: 24px; border-radius: 50%; margin-right: 0.25em; }
   </style>
 </head>
 <body>
@@ -35,7 +35,7 @@ template = """
       </a>
       <div class="title">{{ pr.title }}</div>
       <div class="branches">{{ pr.sourceBranchName }} → {{ pr.targetBranchName }}</div>
-      <div class="date">Criada em {{ pr.creationDateFormatted }}</div>
+      <div class="date">{{ pr.creationDateFormatted }}</div>
       <div class="reviewers">
         {% for rv in pr.reviewers %}
         <img src="{{ rv.imageUrl }}" alt="{{ rv.displayName }}" title="{{ rv.displayName }}" />
@@ -51,7 +51,7 @@ template = """
 def get_config():
     organization = "teltelecom"
     project = "Work"
-    pat = "8QD5bMJ1X3y81te0l2siB62HYc0VjYV2089pILjpfUAGL3VooxueJQQJ99BFACAAAAAi9eYWAAASAZDO"
+    pat = "DJUzm2zmQOwxIuQ3Q0fK3xLpQRTfl498uPFXmPGMiMhSXn8LfLkBJQQJ99BFACAAAAAi9eYWAAASAZDOdevP"
     if not all([organization, project, pat]):
         raise SystemExit(
             "Please set AZURE_DEVOPS_ORG, AZURE_DEVOPS_PROJECT, and AZURE_DEVOPS_PAT"
