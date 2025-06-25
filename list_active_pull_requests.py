@@ -17,7 +17,7 @@ def fetch_active_pull_requests(org: str, project: str, token: str):
 if __name__ == "__main__":
     organization = "teltelecom"
     project = "Work"
-    pat = "2WcYh6n3VHm8jmqiM7PdWxUy93wBa7cNazSzqjkpQUJsmglze5KSJQQJ99BFACAAAAAi9eYWAAASAZ"
+    pat = ""
     if not all([organization, project, pat]):
         raise SystemExit(
             "Please set AZURE_DEVOPS_ORG, AZURE_DEVOPS_PROJECT, and AZURE_DEVOPS_PAT"
