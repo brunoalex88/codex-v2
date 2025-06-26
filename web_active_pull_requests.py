@@ -27,7 +27,7 @@ template = """
   </style>
 </head>
 <body>
-  <h1>Pull Requests Ativos</h1>
+  <h1>Pull Requests</h1>
   {% for pr in pull_requests %}
     <div class="card">
       <div class="repo">
@@ -63,7 +63,7 @@ def extract_user_story_number(title: str) -> str:
     if not title:
         return ""
     # Tenta encontrar padrões "US #12345" ou "US12345"
-    match = re.search(r"US\s*#?(\d{3,})", title, re.IGNORECASE)
+    match = re.search(r"\s*#?(\d{3,})", title, re.IGNORECASE)
     if match:
         return match.group(1)
     return ""
